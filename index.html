@@ -1,531 +1,586 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Globe, 
-  BarChart3, 
-  ShieldCheck, 
-  Users, 
-  CheckCircle, 
-  AlertTriangle,
-  FileText,
-  Lock,
-  Activity,
-  BookOpen
-} from 'lucide-react';
-
-// --- Translation Dictionary ---
-const translations = {
-  en: {
-    title: "HRW AI Strategy Portal",
-    subtitle: "Advancing Human Rights through Responsible Artificial Intelligence",
-    tab_responsible: "Responsible AI",
-    tab_dashboard: "Impact Dashboard",
-    tab_peers: "Peer Organisations",
-    tab_evaluation: "Evaluation Standards",
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRW AI Strategy Portal</title>
     
-    // Responsible AI Section
-    resp_title: "Effective Prompting & Responsible Use",
-    resp_desc: "Guidelines for researchers and staff to ensure secure, unbiased, and effective use of Generative AI.",
-    resp_card1_title: "Zero-Data Retention",
-    resp_card1_text: "Always utilise enterprise environments with strict zero-data retention agreements. Never input personally identifiable information of vulnerable populations.",
-    resp_card2_title: "Mitigating Algorithmic Bias",
-    resp_card2_text: "Structure prompts to demand objective analysis. Cross-reference AI outputs with verified open-source intelligence to prevent hallucination.",
-    resp_card3_title: "Meaningful Human Review",
-    resp_card3_text: "AI is an assistive tool, not a decision-maker. All automated translations and summaries require human verification before publication.",
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    // Dashboard Section
-    dash_title: "AI Solutions Impact Dashboard",
-    dash_desc: "Visualising the operational benefits and metrics of deployed AI and Machine Learning solutions.",
-    dash_metric1: "Translation Hours Saved (Monthly)",
-    dash_metric2: "Crisis Alert Accuracy (OSINT)",
-    dash_metric3: "Satellite Imagery Processing Speed",
+    <!-- Load React, ReactDOM, and Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Load Lucide Icons (using the unpkg build for browser usage) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
-    // Peers Section
-    peers_title: "Peer Organisations & Collaboration",
-    peers_desc: "Mapping AI adoption across the human rights sector to foster collaboration and share best practices.",
-    peer1_name: "Amnesty International",
-    peer1_text: "Collaborating on the Decoders programme. Sharing methodologies for using machine learning in satellite imagery analysis to document infrastructure damage in conflict zones.",
-    peer2_name: "United Nations (UN Pulse)",
-    peer2_text: "Aligning with UN frameworks for predictive analytics in humanitarian response. Exploring shared models for early warning systems.",
-    peer3_name: "Bellingcat",
-    peer3_text: "Co-developing open-source investigation tools. Standardising approaches to verify deepfakes and detect synthetic media in conflict reporting.",
-    peer4_name: "Médecins Sans Frontières (MSF)",
-    peer4_text: "Exploring the use of natural language processing for rapid translation of medical guidelines in crisis zones. Sharing frameworks on responsible health data management.",
-    peer5_name: "International Committee of the Red Cross (ICRC)",
-    peer5_text: "Collaborating on biometric data protection policies. Developing joint ethical standards for the use of facial recognition in humanitarian contexts.",
-    
-    // Evaluation Section
-    eval_title: "PoC & MVP Evaluation Standards",
-    eval_desc: "Rigorous frameworks for evaluating Proof of Concept (PoC) and Minimum Viable Product (MVP) deployments.",
-    eval_step1: "Ethical Impact Assessment",
-    eval_step1_text: "Mandatory screening for potential harms to marginalised groups before any pilot begins.",
-    eval_step2: "Accuracy vs. Recall Calibration",
-    eval_step2_text: "In human rights monitoring, missing an event (false negative) is often more severe than a false positive. Models must be tuned accordingly.",
-    eval_step3: "Security and Privacy Audit",
-    eval_step3_text: "Verification of data encryption, access controls, and compliance with international data protection standards.",
-    eval_step4: "Explainability Check",
-    eval_step4_text: "If we cannot explain how a model reached its conclusion, we cannot use it for human rights advocacy."
-  },
-  pt: {
-    title: "Portal de Estratégia de IA - HRW",
-    subtitle: "Promovendo os Direitos Humanos através de Inteligência Artificial Responsável",
-    tab_responsible: "IA Responsável",
-    tab_dashboard: "Painel de Impacto",
-    tab_peers: "Organizações Parceiras",
-    tab_evaluation: "Padrões de Avaliação",
-    resp_title: "Uso Responsável e Prompts Eficazes",
-    resp_desc: "Diretrizes para garantir o uso seguro e imparcial da IA Generativa.",
-    resp_card1_title: "Retenção Zero de Dados",
-    resp_card1_text: "Utilize ambientes empresariais com acordos rígidos de não retenção de dados. Nunca insira dados pessoais de populações vulneráveis.",
-    resp_card2_title: "Mitigação de Viés Algorítmico",
-    resp_card2_text: "Estruture prompts para exigir análises objetivas. Cruze as saídas da IA com inteligência de fontes abertas verificadas.",
-    resp_card3_title: "Revisão Humana Significativa",
-    resp_card3_text: "A IA é uma ferramenta assistiva. Todas as traduções e resumos automatizados exigem verificação humana.",
-    dash_title: "Painel de Impacto de Soluções de IA",
-    dash_desc: "Visualizando os benefícios operacionais das soluções de Inteligência Artificial e Aprendizado de Máquina.",
-    dash_metric1: "Horas de Tradução Economizadas (Mensal)",
-    dash_metric2: "Precisão de Alerta de Crise (OSINT)",
-    dash_metric3: "Velocidade de Processamento de Imagens de Satélite",
-    peers_title: "Organizações Parceiras e Colaboração",
-    peers_desc: "Mapeando a adoção de IA no setor de direitos humanos para compartilhar melhores práticas.",
-    peer1_name: "Anistia Internacional",
-    peer1_text: "Colaboração na análise de imagens de satélite para documentar danos a infraestruturas em zonas de conflito.",
-    peer2_name: "Nações Unidas (UN Pulse)",
-    peer2_text: "Alinhamento com estruturas da ONU para análises preditivas em respostas humanitárias.",
-    peer3_name: "Bellingcat",
-    peer3_text: "Co-desenvolvimento de ferramentas de investigação de código aberto para verificar deepfakes.",
-    peer4_name: "Médicos Sem Fronteiras (MSF)",
-    peer4_text: "Explorando o uso de processamento de linguagem natural para tradução rápida de diretrizes médicas em zonas de crise. Compartilhando estruturas de gestão responsável de dados de saúde.",
-    peer5_name: "Comitê Internacional da Cruz Vermelha (CICV)",
-    peer5_text: "Colaboração em políticas de proteção de dados biométricos. Desenvolvimento de padrões éticos conjuntos para o uso de reconhecimento facial em contextos humanitários.",
-    eval_title: "Padrões de Avaliação PoC e MVP",
-    eval_desc: "Estruturas rigorosas para avaliar implantações de Provas de Conceito e Produtos Mínimos Viáveis.",
-    eval_step1: "Avaliação de Impacto Ético",
-    eval_step1_text: "Triagem obrigatória de possíveis danos a grupos marginalizados.",
-    eval_step2: "Calibração de Precisão e Revocação",
-    eval_step2_text: "Modelos devem ser ajustados para minimizar falsos negativos em monitoramento de direitos humanos.",
-    eval_step3: "Auditoria de Segurança e Privacidade",
-    eval_step3_text: "Verificação de criptografia de dados e conformidade com padrões internacionais.",
-    eval_step4: "Verificação de Explicabilidade",
-    eval_step4_text: "Se não pudermos explicar a conclusão de um modelo, não podemos usá-lo."
-  },
-  de: {
-    title: "HRW KI-Strategie-Portal",
-    subtitle: "Förderung der Menschenrechte durch verantwortungsvolle Künstliche Intelligenz",
-    tab_responsible: "Verantw. KI",
-    tab_dashboard: "Wirkungs-Dashboard",
-    tab_peers: "Partnerorganisationen",
-    tab_evaluation: "Bewertungsstandards",
-    resp_title: "Effektives Prompting & Verantwortungsvolle Nutzung",
-    resp_desc: "Richtlinien für den sicheren und unvoreingenommenen Einsatz von generativer KI.",
-    resp_card1_title: "Null-Daten-Speicherung",
-    resp_card1_text: "Nutzen Sie Unternehmensumgebungen mit strengen Richtlinien zur Nicht-Speicherung von Daten. Geben Sie niemals persönliche Daten gefährdeter Personen ein.",
-    resp_card2_title: "Minderung algorithmischer Voreingenommenheit",
-    resp_card2_text: "Strukturieren Sie Prompts so, dass objektive Analysen gefordert werden. Gleichen Sie KI-Ergebnisse mit verifizierten offenen Quellen ab.",
-    resp_card3_title: "Sinnvolle menschliche Überprüfung",
-    resp_card3_text: "KI ist ein Hilfswerkzeug. Alle automatisierten Übersetzungen erfordern menschliche Überprüfung.",
-    dash_title: "KI-Lösungen Wirkungs-Dashboard",
-    dash_desc: "Visualisierung der operativen Vorteile von KI- und Machine-Learning-Lösungen.",
-    dash_metric1: "Eingesparte Übersetzungsstunden (Monatlich)",
-    dash_metric2: "Genauigkeit der Krisenwarnungen (OSINT)",
-    dash_metric3: "Verarbeitungsgeschwindigkeit von Satellitenbildern",
-    peers_title: "Partnerorganisationen & Zusammenarbeit",
-    peers_desc: "Kartierung der KI-Einführung im Menschenrechtssektor zum Austausch von Best Practices.",
-    peer1_name: "Amnesty International",
-    peer1_text: "Zusammenarbeit bei der Analyse von Satellitenbildern zur Dokumentation von Infrastrukturschäden in Konfliktgebieten.",
-    peer2_name: "Vereinte Nationen (UN Pulse)",
-    peer2_text: "Ausrichtung an UN-Rahmenwerken für prädiktive Analysen in der humanitären Hilfe.",
-    peer3_name: "Bellingcat",
-    peer3_text: "Gemeinsame Entwicklung von Open-Source-Tools zur Untersuchung und Verifizierung von Deepfakes.",
-    peer4_name: "Ärzte ohne Grenzen (MSF)",
-    peer4_text: "Erforschung des Einsatzes von natürlicher Sprachverarbeitung zur schnellen Übersetzung medizinischer Richtlinien in Krisengebieten. Austausch von Rahmenwerken für verantwortungsvolles Gesundheitsdatenmanagement.",
-    peer5_name: "Internationales Komitee vom Roten Kreuz (IKRK)",
-    peer5_text: "Zusammenarbeit bei Richtlinien zum Schutz biometrischer Daten. Entwicklung gemeinsamer ethischer Standards für den Einsatz von Gesichtserkennung in humanitären Kontexten.",
-    eval_title: "PoC & MVP Bewertungsstandards",
-    eval_desc: "Strenge Rahmenwerke zur Bewertung von Proof of Concept und Minimum Viable Product.",
-    eval_step1: "Ethische Folgenabschätzung",
-    eval_step1_text: "Obligatorische Prüfung auf mögliche Schäden für marginalisierte Gruppen.",
-    eval_step2: "Kalibrierung von Genauigkeit vs. Trefferquote",
-    eval_step2_text: "Modelle müssen so eingestellt werden, dass falsch-negative Ergebnisse minimiert werden.",
-    eval_step3: "Sicherheits- und Datenschutzaudit",
-    eval_step3_text: "Überprüfung der Datenverschlüsselung und Einhaltung internationaler Standards.",
-    eval_step4: "Erklärbarkeitsprüfung",
-    eval_step4_text: "Wenn wir die Schlussfolgerung eines Modells nicht erklären können, können wir es nicht verwenden."
-  },
-  fr: {
-    title: "Portail de Stratégie IA - HRW",
-    subtitle: "Faire progresser les droits humains grâce à une intelligence artificielle responsable",
-    tab_responsible: "IA Responsable",
-    tab_dashboard: "Tableau de Bord",
-    tab_peers: "Organisations Paires",
-    tab_evaluation: "Normes d'Évaluation",
-    resp_title: "Utilisation Responsable et Prompts Efficaces",
-    resp_desc: "Directives pour garantir une utilisation sécurisée et impartiale de l'IA générative.",
-    resp_card1_title: "Rétention Zéro des Données",
-    resp_card1_text: "Utilisez des environnements d'entreprise avec des accords stricts de non-conservation des données. Ne saisissez jamais de données personnelles.",
-    resp_card2_title: "Atténuation des Biais Algorithmiques",
-    resp_card2_text: "Structurez les requêtes pour exiger des analyses objectives. Croisez les résultats avec des renseignements de sources ouvertes.",
-    resp_card3_title: "Révision Humaine Significative",
-    resp_card3_text: "L'IA est un outil d'assistance. Toutes les traductions automatisées nécessitent une vérification humaine.",
-    dash_title: "Tableau de Bord de l'Impact des Solutions IA",
-    dash_desc: "Visualisation des avantages opérationnels des solutions d'IA et d'apprentissage automatique.",
-    dash_metric1: "Heures de Traduction Économisées (Mensuel)",
-    dash_metric2: "Précision des Alertes de Crise (OSINT)",
-    dash_metric3: "Vitesse de Traitement des Images Satellites",
-    peers_title: "Organisations Paires et Collaboration",
-    peers_desc: "Cartographie de l'adoption de l'IA dans le secteur des droits humains.",
-    peer1_name: "Amnesty International",
-    peer1_text: "Collaboration sur l'analyse d'images satellites pour documenter les dommages en zone de conflit.",
-    peer2_name: "Nations Unies (UN Pulse)",
-    peer2_text: "Alignement sur les cadres de l'ONU pour l'analyse prédictive dans la réponse humanitaire.",
-    peer3_name: "Bellingcat",
-    peer3_text: "Co-développement d'outils d'investigation open-source pour vérifier les deepfakes.",
-    peer4_name: "Médecins Sans Frontières (MSF)",
-    peer4_text: "Exploration de l'utilisation du traitement du langage naturel pour la traduction rapide des directives médicales dans les zones de crise. Partage de cadres sur la gestion responsable des données de santé.",
-    peer5_name: "Comité International de la Croix-Rouge (CICR)",
-    peer5_text: "Collaboration sur les politiques de protection des données biométriques. Développement de normes éthiques communes pour l'utilisation de la reconnaissance faciale dans des contextes humanitaires.",
-    eval_title: "Normes d'Évaluation PoC et MVP",
-    eval_desc: "Cadres rigoureux pour évaluer les déploiements de preuves de concept et de produits minimaux viables.",
-    eval_step1: "Évaluation de l'Impact Éthique",
-    eval_step1_text: "Examen obligatoire des préjudices potentiels pour les groupes marginalisés.",
-    eval_step2: "Calibration Précision vs Rappel",
-    eval_step2_text: "Les modèles doivent être ajustés pour minimiser les faux négatifs.",
-    eval_step3: "Audit de Sécurité et de Confidentialité",
-    eval_step3_text: "Vérification du chiffrement des données et de la conformité aux normes internationales.",
-    eval_step4: "Vérification de l'Explicabilité",
-    eval_step4_text: "Si nous ne pouvons pas expliquer la conclusion d'un modèle, nous ne pouvons pas l'utiliser."
-  },
-  es: {
-    title: "Portal de Estrategia de IA - HRW",
-    subtitle: "Promoviendo los Derechos Humanos mediante Inteligencia Artificial Responsable",
-    tab_responsible: "IA Responsable",
-    tab_dashboard: "Panel de Impacto",
-    tab_peers: "Organizaciones Pares",
-    tab_evaluation: "Estándares de Evaluación",
-    resp_title: "Uso Responsable y Prompts Eficaces",
-    resp_desc: "Directrices para garantizar el uso seguro e imparcial de la IA Generativa.",
-    resp_card1_title: "Retención Cero de Datos",
-    resp_card1_text: "Utilice entornos empresariales con acuerdos estrictos de no retención de datos. Nunca introduzca datos personales de poblaciones vulnerables.",
-    resp_card2_title: "Mitigación del Sesgo Algorítmico",
-    resp_card2_text: "Estructure las indicaciones para exigir análisis objetivos. Contraste los resultados de la IA con inteligencia de fuentes abiertas.",
-    resp_card3_title: "Revisión Humana Significativa",
-    resp_card3_text: "La IA es una herramienta de asistencia. Todas las traducciones y resúmenes automatizados requieren verificación humana.",
-    dash_title: "Panel de Impacto de Soluciones de IA",
-    dash_desc: "Visualizando los beneficios operativos de las soluciones de Inteligencia Artificial.",
-    dash_metric1: "Horas de Traducción Ahorradas (Mensual)",
-    dash_metric2: "Precisión de Alerta de Crisis (OSINT)",
-    dash_metric3: "Velocidad de Procesamiento de Imágenes Satelitales",
-    peers_title: "Organizaciones Pares y Colaboración",
-    peers_desc: "Mapeando la adopción de IA en el sector de derechos humanos para compartir mejores prácticas.",
-    peer1_name: "Amnistía Internacional",
-    peer1_text: "Colaboración en el análisis de imágenes satelitales para documentar daños en zonas de conflicto.",
-    peer2_name: "Naciones Unidas (UN Pulse)",
-    peer2_text: "Alineación con los marcos de la ONU para el análisis predictivo en la respuesta humanitaria.",
-    peer3_name: "Bellingcat",
-    peer3_text: "Desarrollo conjunto de herramientas de investigación de código abierto para verificar deepfakes.",
-    peer4_name: "Médicos Sin Fronteras (MSF)",
-    peer4_text: "Explorando el uso del procesamiento del lenguaje natural para la traducción rápida de directrices médicas en zonas de crisis. Compartiendo marcos sobre la gestión responsable de datos de salud.",
-    peer5_name: "Comité Internacional de la Cruz Roja (CICR)",
-    peer5_text: "Colaborando en políticas de protección de datos biométricos. Desarrollando estándares éticos conjuntos para el uso del reconocimiento facial en contextos humanitarios.",
-    eval_title: "Estándares de Evaluación PoC y MVP",
-    eval_desc: "Marcos rigurosos para evaluar implementaciones de Pruebas de Concepto y Productos Mínimos Viables.",
-    eval_step1: "Evaluación de Impacto Ético",
-    eval_step1_text: "Revisión obligatoria de posibles daños a grupos marginados antes de cualquier piloto.",
-    eval_step2: "Calibración de Precisión frente a Exhaustividad",
-    eval_step2_text: "Los modelos deben ajustarse para minimizar los falsos negativos en el seguimiento de los derechos humanos.",
-    eval_step3: "Auditoría de Seguridad y Privacidad",
-    eval_step3_text: "Verificación del cifrado de datos y cumplimiento de los estándares internacionales.",
-    eval_step4: "Verificación de Explicabilidad",
-    eval_step4_text: "Si no podemos explicar la conclusión de un modelo, no podemos usarlo."
-  },
-  nl: {
-    title: "HRW AI-strategieportaal",
-    subtitle: "Bevordering van mensenrechten door verantwoorde kunstmatige intelligentie",
-    tab_responsible: "Verantwoorde AI",
-    tab_dashboard: "Impact Dashboard",
-    tab_peers: "Partnerorganisaties",
-    tab_evaluation: "Evaluatiestandaarden",
-    resp_title: "Effectief Prompting & Verantwoord Gebruik",
-    resp_desc: "Richtlijnen voor een veilig en onbevooroordeeld gebruik van generatieve AI.",
-    resp_card1_title: "Nul-Data Retentie",
-    resp_card1_text: "Gebruik bedrijfsomgevingen met strikte afspraken over het niet bewaren van gegevens. Voer nooit persoonlijke gegevens van kwetsbare personen in.",
-    resp_card2_title: "Beperking van algoritmische vooroordelen",
-    resp_card2_text: "Structureer prompts om objectieve analyses te eisen. Controleer AI-uitvoer met geverifieerde open-source intelligentie.",
-    resp_card3_title: "Betekenisvolle menselijke beoordeling",
-    resp_card3_text: "AI is een hulpmiddel. Alle geautomatiseerde vertalingen vereisen menselijke verificatie.",
-    dash_title: "Impact Dashboard voor AI-oplossingen",
-    dash_desc: "Visualisatie van de operationele voordelen van AI- en machine learning-oplossingen.",
-    dash_metric1: "Bespaarde vertaaluren (maandelijks)",
-    dash_metric2: "Nauwkeurigheid crisiswaarschuwingen (OSINT)",
-    dash_metric3: "Verwerkingssnelheid satellietbeelden",
-    peers_title: "Partnerorganisaties & Samenwerking",
-    peers_desc: "In kaart brengen van AI-adoptie in de mensenrechtensector om best practices te delen.",
-    peer1_name: "Amnesty International",
-    peer1_text: "Samenwerking bij de analyse van satellietbeelden om schade aan infrastructuur in conflictgebieden te documenteren.",
-    peer2_name: "Verenigde Naties (UN Pulse)",
-    peer2_text: "Afstemming op VN-kaders voor voorspellende analyses bij humanitaire respons.",
-    peer3_name: "Bellingcat",
-    peer3_text: "Gezamenlijke ontwikkeling van open-source onderzoekstools om deepfakes te verifiëren.",
-    peer4_name: "Artsen zonder Grenzen (MSF)",
-    peer4_text: "Onderzoek naar het gebruik van natuurlijke taalverwerking voor snelle vertaling van medische richtlijnen in crisisgebieden. Delen van kaders voor verantwoord beheer van gezondheidsgegevens.",
-    peer5_name: "Internationale Comité van het Rode Kruis (ICRC)",
-    peer5_text: "Samenwerking aan beleid voor de bescherming van biometrische gegevens. Ontwikkeling van gezamenlijke ethische normen voor het gebruik van gezichtsherkenning in humanitaire contexten.",
-    eval_title: "PoC & MVP Evaluatiestandaarden",
-    eval_desc: "Strenge kaders voor het evalueren van Proof of Concept en Minimum Viable Product implementaties.",
-    eval_step1: "Ethische impactbeoordeling",
-    eval_step1_text: "Verplichte screening op mogelijke schade voor gemarginaliseerde groepen.",
-    eval_step2: "Kalibratie van nauwkeurigheid vs. recall",
-    eval_step2_text: "Modellen moeten worden afgesteld om fout-negatieven te minimaliseren.",
-    eval_step3: "Beveiligings- en privacy-audit",
-    eval_step3_text: "Verificatie van gegevensversleuteling en naleving van internationale normen.",
-    eval_step4: "Controle op uitlegbaarheid",
-    eval_step4_text: "Als we de conclusie van een model niet kunnen uitleggen, kunnen we het niet gebruiken."
-  },
-  ar: {
-    title: "بوابة استراتيجية الذكاء الاصطناعي",
-    subtitle: "تعزيز حقوق الإنسان من خلال الذكاء الاصطناعي المسؤول",
-    tab_responsible: "الذكاء الاصطناعي المسؤول",
-    tab_dashboard: "لوحة التأثير",
-    tab_peers: "المنظمات النظيرة",
-    tab_evaluation: "معايير التقييم",
-    resp_title: "الاستخدام المسؤول والتوجيه الفعال",
-    resp_desc: "إرشادات لضمان الاستخدام الآمن والموضوعي للذكاء الاصطناعي التوليدي.",
-    resp_card1_title: "عدم الاحتفاظ بالبيانات",
-    resp_card1_text: "استخدم بيئات المؤسسات مع اتفاقيات صارمة لعدم الاحتفاظ بالبيانات. لا تقم أبدًا بإدخال بيانات شخصية للسكان المعرضين للخطر.",
-    resp_card2_title: "التخفيف من التحيز الخوارزمي",
-    resp_card2_text: "صياغة الأوامر لطلب تحليلات موضوعية. قم بمقاطعة مخرجات الذكاء الاصطناعي مع معلومات المصادر المفتوحة التي تم التحقق منها.",
-    resp_card3_title: "المراجعة البشرية الهادفة",
-    resp_card3_text: "الذكاء الاصطناعي هو أداة مساعدة. تتطلب جميع الترجمات والملخصات الآلية تحققًا بشريًا.",
-    dash_title: "لوحة تأثير حلول الذكاء الاصطناعي",
-    dash_desc: "تصور الفوائد التشغيلية لحلول الذكاء الاصطناعي والتعلم الآلي.",
-    dash_metric1: "ساعات الترجمة الموفرة (شهريًا)",
-    dash_metric2: "دقة التنبيه بالأزمات",
-    dash_metric3: "سرعة معالجة صور الأقمار الصناعية",
-    peers_title: "المنظمات النظيرة والتعاون",
-    peers_desc: "رسم خرائط اعتماد الذكاء الاصطناعي عبر قطاع حقوق الإنسان لمشاركة أفضل الممارسات.",
-    peer1_name: "منظمة العفو الدولية",
-    peer1_text: "التعاون في تحليل صور الأقمار الصناعية لتوثيق أضرار البنية التحتية في مناطق النزاع.",
-    peer2_name: "الأمم المتحدة (UN Pulse)",
-    peer2_text: "المواءمة مع أطر الأمم المتحدة للتحليلات التنبؤية في الاستجابة الإنسانية.",
-    peer3_name: "بيلينغكات",
-    peer3_text: "التطوير المشترك لأدوات تحقيق مفتوحة المصدر للتحقق من التزييف العميق.",
-    peer4_name: "أطباء بلا حدود (MSF)",
-    peer4_text: "استكشاف استخدام معالجة اللغات الطبيعية للترجمة السريعة للإرشادات الطبية في مناطق الأزمات. مشاركة أطر إدارة البيانات الصحية المسؤولة.",
-    peer5_name: "اللجنة الدولية للصليب الأحمر (ICRC)",
-    peer5_text: "التعاون في سياسات حماية البيانات البيومترية. تطوير معايير أخلاقية مشتركة لاستخدام التعرف على الوجوه في السياقات الإنسانية.",
-    eval_title: "معايير تقييم إثبات المفهوم",
-    eval_desc: "أطر صارمة لتقييم عمليات نشر إثبات المفهوم (PoC) والحد الأدنى للمنتج القابل للتطبيق (MVP).",
-    eval_step1: "تقييم الأثر الأخلاقي",
-    eval_step1_text: "فحص إلزامي للأضرار المحتملة على الفئات المهمشة قبل بدء أي برنامج تجريبي.",
-    eval_step2: "معايرة الدقة مقابل الاستدعاء",
-    eval_step2_text: "يجب ضبط النماذج لتقليل السلبيات الكاذبة في مراقبة حقوق الإنسان.",
-    eval_step3: "تدقيق الأمن والخصوصية",
-    eval_step3_text: "التحقق من تشفير البيانات والامتثال للمعايير الدولية لحماية البيانات.",
-    eval_step4: "التحقق من قابلية التفسير",
-    eval_step4_text: "إذا لم نتمكن من تفسير كيفية وصول النموذج إلى استنتاجه، فلا يمكننا استخدامه."
-  }
-};
+    <!-- Custom CSS for RTL/LTR transitions and simple animations -->
+    <style>
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Add some padding to ensure icons don't touch text */
+        .lucide { margin-right: 0.25rem; }
+        [dir="rtl"] .lucide { margin-right: 0; margin-left: 0.25rem; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-const languages = [
-  { code: 'en', name: 'English' },
-  { code: 'pt', name: 'Português' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'fr', name: 'Français' },
-  { code: 'es', name: 'Español' },
-  { code: 'nl', name: 'Dutch' },
-  { code: 'ar', name: 'العربية' }
-];
+    <!-- The type="text/babel" tells Babel to compile this script block -->
+    <script type="text/babel">
+        // 1. Setup Icons since we can't import them like in Node.js
+        // We will create lightweight functional components that render SVG using Lucide data
+        const Icon = ({ name, className }) => {
+            const iconData = lucide.icons[name];
+            if (!iconData) return null;
+            
+            // Create the SVG markup using Lucide's icon data
+            const svgAttrs = {
+                xmlns: "http://www.w3.org/2000/svg",
+                width: "24",
+                height: "24",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                strokeWidth: "2",
+                strokeLinecap: "round",
+                strokeLinejoin: "round",
+                ...iconData.attrs
+            };
 
-export default function App() {
-  const [lang, setLang] = useState('en');
-  const [activeTab, setActiveTab] = useState('responsible');
+            return (
+                <svg className={`lucide lucide-${name} ${className || ''}`} {...svgAttrs} dangerouslySetInnerHTML={{ __html: iconData.reduce((acc, [tag, attrs]) => {
+                    const attrString = Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ');
+                    return acc + `<${tag} ${attrString} />`;
+                }, '') }} />
+            );
+        };
 
-  const t = (key) => translations[lang][key] || translations['en'][key];
-  const isRTL = lang === 'ar';
+        // Component wrappers for icons to match original JSX
+        const Globe = ({ className }) => <Icon name="Globe" className={className} />;
+        const BookOpen = ({ className }) => <Icon name="BookOpen" className={className} />;
+        const BarChart3 = ({ className }) => <Icon name="BarChart3" className={className} />;
+        const ShieldCheck = ({ className }) => <Icon name="ShieldCheck" className={className} />;
+        const Users = ({ className }) => <Icon name="Users" className={className} />;
+        const CheckCircle = ({ className }) => <Icon name="CheckCircle" className={className} />;
+        const AlertTriangle = ({ className }) => <Icon name="AlertTriangle" className={className} />;
+        const Lock = ({ className }) => <Icon name="Lock" className={className} />;
 
-  return (
-    <div 
-      className={`min-h-screen bg-slate-50 text-slate-900 font-sans ${isRTL ? 'rtl' : 'ltr'}`} 
-      dir={isRTL ? 'rtl' : 'ltr'}
-    >
-      {/* Header */}
-      <header className="bg-blue-900 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Globe className="h-8 w-8 text-blue-300" />
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">{t('title')}</h1>
-              <p className="text-xs text-blue-200 hidden sm:block">{t('subtitle')}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <select 
-              value={lang} 
-              onChange={(e) => setLang(e.target.value)}
-              className="bg-blue-800 text-white border border-blue-700 rounded-md py-1 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              {languages.map(l => (
-                <option key={l.code} value={l.code}>{l.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </header>
+        const { useState } = React;
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-200 pb-2">
-          {[
-            { id: 'responsible', icon: BookOpen, label: t('tab_responsible') },
-            { id: 'dashboard', icon: BarChart3, label: t('tab_dashboard') },
-            { id: 'peers', icon: Users, label: t('tab_peers') },
-            { id: 'evaluation', icon: ShieldCheck, label: t('tab_evaluation') }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                activeTab === tab.id 
-                  ? 'bg-blue-100 text-blue-800 border-b-2 border-blue-700' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        const translations = {
+            en: {
+                title: "HRW AI Strategy Portal",
+                subtitle: "Advancing Human Rights through Responsible Artificial Intelligence",
+                tab_responsible: "Responsible AI",
+                tab_dashboard: "Impact Dashboard",
+                tab_peers: "Peer Organisations",
+                tab_evaluation: "Evaluation Standards",
+                resp_title: "Effective Prompting & Responsible Use",
+                resp_desc: "Guidelines for researchers and staff to ensure secure, unbiased, and effective use of Generative AI.",
+                resp_card1_title: "Zero-Data Retention",
+                resp_card1_text: "Always utilise enterprise environments with strict zero-data retention agreements. Never input personally identifiable information of vulnerable populations.",
+                resp_card2_title: "Mitigating Algorithmic Bias",
+                resp_card2_text: "Structure prompts to demand objective analysis. Cross-reference AI outputs with verified open-source intelligence to prevent hallucination.",
+                resp_card3_title: "Meaningful Human Review",
+                resp_card3_text: "AI is an assistive tool, not a decision-maker. All automated translations and summaries require human verification before publication.",
+                dash_title: "AI Solutions Impact Dashboard",
+                dash_desc: "Visualising the operational benefits and metrics of deployed AI and Machine Learning solutions.",
+                dash_metric1: "Translation Hours Saved (Monthly)",
+                dash_metric2: "Crisis Alert Accuracy (OSINT)",
+                dash_metric3: "Satellite Imagery Processing Speed",
+                peers_title: "Peer Organisations & Collaboration",
+                peers_desc: "Mapping AI adoption across the human rights sector to foster collaboration and share best practices.",
+                peer1_name: "Amnesty International",
+                peer1_text: "Collaborating on the Decoders programme. Sharing methodologies for using machine learning in satellite imagery analysis to document infrastructure damage in conflict zones.",
+                peer2_name: "United Nations (UN Pulse)",
+                peer2_text: "Aligning with UN frameworks for predictive analytics in humanitarian response. Exploring shared models for early warning systems.",
+                peer3_name: "Bellingcat",
+                peer3_text: "Co-developing open-source investigation tools. Standardising approaches to verify deepfakes and detect synthetic media in conflict reporting.",
+                peer4_name: "Médecins Sans Frontières (MSF)",
+                peer4_text: "Exploring the use of natural language processing for rapid translation of medical guidelines in crisis zones. Sharing frameworks on responsible health data management.",
+                peer5_name: "International Committee of the Red Cross (ICRC)",
+                peer5_text: "Collaborating on biometric data protection policies. Developing joint ethical standards for the use of facial recognition in humanitarian contexts.",
+                eval_title: "PoC & MVP Evaluation Standards",
+                eval_desc: "Rigorous frameworks for evaluating Proof of Concept (PoC) and Minimum Viable Product (MVP) deployments.",
+                eval_step1: "Ethical Impact Assessment",
+                eval_step1_text: "Mandatory screening for potential harms to marginalised groups before any pilot begins.",
+                eval_step2: "Accuracy vs. Recall Calibration",
+                eval_step2_text: "In human rights monitoring, missing an event (false negative) is often more severe than a false positive. Models must be tuned accordingly.",
+                eval_step3: "Security and Privacy Audit",
+                eval_step3_text: "Verification of data encryption, access controls, and compliance with international data protection standards.",
+                eval_step4: "Explainability Check",
+                eval_step4_text: "If we cannot explain how a model reached its conclusion, we cannot use it for human rights advocacy."
+            },
+            pt: {
+                title: "Portal de Estratégia de IA - HRW",
+                subtitle: "Promovendo os Direitos Humanos através de Inteligência Artificial Responsável",
+                tab_responsible: "IA Responsável",
+                tab_dashboard: "Painel de Impacto",
+                tab_peers: "Organizações Parceiras",
+                tab_evaluation: "Padrões de Avaliação",
+                resp_title: "Uso Responsável e Prompts Eficazes",
+                resp_desc: "Diretrizes para garantir o uso seguro e imparcial da IA Generativa.",
+                resp_card1_title: "Retenção Zero de Dados",
+                resp_card1_text: "Utilize ambientes empresariais com acordos rígidos de não retenção de dados. Nunca insira dados pessoais de populações vulneráveis.",
+                resp_card2_title: "Mitigação de Viés Algorítmico",
+                resp_card2_text: "Estruture prompts para exigir análises objetivas. Cruze as saídas da IA com inteligência de fontes abertas verificadas.",
+                resp_card3_title: "Revisão Humana Significativa",
+                resp_card3_text: "A IA é uma ferramenta assistiva. Todas as traduções e resumos automatizados exigem verificação humana.",
+                dash_title: "Painel de Impacto de Soluções de IA",
+                dash_desc: "Visualizando os benefícios operacionais das soluções de Inteligência Artificial e Aprendizado de Máquina.",
+                dash_metric1: "Horas de Tradução Economizadas (Mensal)",
+                dash_metric2: "Precisão de Alerta de Crise (OSINT)",
+                dash_metric3: "Velocidade de Processamento de Imagens de Satélite",
+                peers_title: "Organizações Parceiras e Colaboração",
+                peers_desc: "Mapeando a adoção de IA no setor de direitos humanos para compartilhar melhores práticas.",
+                peer1_name: "Anistia Internacional",
+                peer1_text: "Colaboração na análise de imagens de satélite para documentar danos a infraestruturas em zonas de conflito.",
+                peer2_name: "Nações Unidas (UN Pulse)",
+                peer2_text: "Alinhamento com estruturas da ONU para análises preditivas em respostas humanitárias.",
+                peer3_name: "Bellingcat",
+                peer3_text: "Co-desenvolvimento de ferramentas de investigação de código aberto para verificar deepfakes.",
+                peer4_name: "Médicos Sem Fronteiras (MSF)",
+                peer4_text: "Explorando o uso de processamento de linguagem natural para tradução rápida de diretrizes médicas em zonas de crise. Compartilhando estruturas de gestão responsável de dados de saúde.",
+                peer5_name: "Comitê Internacional da Cruz Vermelha (CICV)",
+                peer5_text: "Colaboração em políticas de proteção de dados biométricos. Desenvolvimento de padrões éticos conjuntos para o uso de reconhecimento facial em contextos humanitários.",
+                eval_title: "Padrões de Avaliação PoC e MVP",
+                eval_desc: "Estruturas rigorosas para avaliar implantações de Provas de Conceito e Produtos Mínimos Viáveis.",
+                eval_step1: "Avaliação de Impacto Ético",
+                eval_step1_text: "Triagem obrigatória de possíveis danos a grupos marginalizados.",
+                eval_step2: "Calibração de Precisão e Revocação",
+                eval_step2_text: "Modelos devem ser ajustados para minimizar falsos negativos em monitoramento de direitos humanos.",
+                eval_step3: "Auditoria de Segurança e Privacidade",
+                eval_step3_text: "Verificação de criptografia de dados e conformidade com padrões internacionais.",
+                eval_step4: "Verificação de Explicabilidade",
+                eval_step4_text: "Se não pudermos explicar a conclusão de um modelo, não podemos usá-lo."
+            },
+            de: {
+                title: "HRW KI-Strategie-Portal",
+                subtitle: "Förderung der Menschenrechte durch verantwortungsvolle Künstliche Intelligenz",
+                tab_responsible: "Verantw. KI",
+                tab_dashboard: "Wirkungs-Dashboard",
+                tab_peers: "Partnerorganisationen",
+                tab_evaluation: "Bewertungsstandards",
+                resp_title: "Effektives Prompting & Verantwortungsvolle Nutzung",
+                resp_desc: "Richtlinien für den sicheren und unvoreingenommenen Einsatz von generativer KI.",
+                resp_card1_title: "Null-Daten-Speicherung",
+                resp_card1_text: "Nutzen Sie Unternehmensumgebungen mit strengen Richtlinien zur Nicht-Speicherung von Daten. Geben Sie niemals persönliche Daten gefährdeter Personen ein.",
+                resp_card2_title: "Minderung algorithmischer Voreingenommenheit",
+                resp_card2_text: "Strukturieren Sie Prompts so, dass objektive Analysen gefordert werden. Gleichen Sie KI-Ergebnisse mit verifizierten offenen Quellen ab.",
+                resp_card3_title: "Sinnvolle menschliche Überprüfung",
+                resp_card3_text: "KI ist ein Hilfswerkzeug. Alle automatisierten Übersetzungen erfordern menschliche Überprüfung.",
+                dash_title: "KI-Lösungen Wirkungs-Dashboard",
+                dash_desc: "Visualisierung der operativen Vorteile von KI- und Machine-Learning-Lösungen.",
+                dash_metric1: "Eingesparte Übersetzungsstunden (Monatlich)",
+                dash_metric2: "Genauigkeit der Krisenwarnungen (OSINT)",
+                dash_metric3: "Verarbeitungsgeschwindigkeit von Satellitenbildern",
+                peers_title: "Partnerorganisationen & Zusammenarbeit",
+                peers_desc: "Kartierung der KI-Einführung im Menschenrechtssektor zum Austausch von Best Practices.",
+                peer1_name: "Amnesty International",
+                peer1_text: "Zusammenarbeit bei der Analyse von Satellitenbildern zur Dokumentation von Infrastrukturschäden in Konfliktgebieten.",
+                peer2_name: "Vereinte Nationen (UN Pulse)",
+                peer2_text: "Ausrichtung an UN-Rahmenwerken für prädiktive Analysen in der humanitären Hilfe.",
+                peer3_name: "Bellingcat",
+                peer3_text: "Gemeinsame Entwicklung von Open-Source-Tools zur Untersuchung und Verifizierung von Deepfakes.",
+                peer4_name: "Ärzte ohne Grenzen (MSF)",
+                peer4_text: "Erforschung des Einsatzes von natürlicher Sprachverarbeitung zur schnellen Übersetzung medizinischer Richtlinien in Krisengebieten. Austausch von Rahmenwerken für verantwortungsvolles Gesundheitsdatenmanagement.",
+                peer5_name: "Internationales Komitee vom Roten Kreuz (IKRK)",
+                peer5_text: "Zusammenarbeit bei Richtlinien zum Schutz biometrischer Daten. Entwicklung gemeinsamer ethischer Standards für den Einsatz von Gesichtserkennung in humanitären Kontexten.",
+                eval_title: "PoC & MVP Bewertungsstandards",
+                eval_desc: "Strenge Rahmenwerke zur Bewertung von Proof of Concept und Minimum Viable Product.",
+                eval_step1: "Ethische Folgenabschätzung",
+                eval_step1_text: "Obligatorische Prüfung auf mögliche Schäden für marginalisierte Gruppen.",
+                eval_step2: "Kalibrierung von Genauigkeit vs. Trefferquote",
+                eval_step2_text: "Modelle müssen so eingestellt werden, dass falsch-negative Ergebnisse minimiert werden.",
+                eval_step3: "Sicherheits- und Datenschutzaudit",
+                eval_step3_text: "Überprüfung der Datenverschlüsselung und Einhaltung internationaler Standards.",
+                eval_step4: "Erklärbarkeitsprüfung",
+                eval_step4_text: "Wenn wir die Schlussfolgerung eines Modells nicht erklären können, können wir es nicht verwenden."
+            },
+            fr: {
+                title: "Portail de Stratégie IA - HRW",
+                subtitle: "Faire progresser les droits humains grâce à une intelligence artificielle responsable",
+                tab_responsible: "IA Responsable",
+                tab_dashboard: "Tableau de Bord",
+                tab_peers: "Organisations Paires",
+                tab_evaluation: "Normes d'Évaluation",
+                resp_title: "Utilisation Responsable et Prompts Efficaces",
+                resp_desc: "Directives pour garantir une utilisation sécurisée et impartiale de l'IA générative.",
+                resp_card1_title: "Rétention Zéro des Données",
+                resp_card1_text: "Utilisez des environnements d'entreprise avec des accords stricts de non-conservation des données. Ne saisissez jamais de données personnelles.",
+                resp_card2_title: "Atténuation des Biais Algorithmiques",
+                resp_card2_text: "Structurez les requêtes pour exiger des analyses objectives. Croisez les résultats avec des renseignements de sources ouvertes.",
+                resp_card3_title: "Révision Humaine Significative",
+                resp_card3_text: "L'IA est un outil d'assistance. Toutes les traductions automatisées nécessitent une vérification humaine.",
+                dash_title: "Tableau de Bord de l'Impact des Solutions IA",
+                dash_desc: "Visualisation des avantages opérationnels des solutions d'IA et d'apprentissage automatique.",
+                dash_metric1: "Heures de Traduction Économisées (Mensuel)",
+                dash_metric2: "Précision des Alertes de Crise (OSINT)",
+                dash_metric3: "Vitesse de Traitement des Images Satellites",
+                peers_title: "Organisations Paires et Collaboration",
+                peers_desc: "Cartographie de l'adoption de l'IA dans le secteur des droits humains.",
+                peer1_name: "Amnesty International",
+                peer1_text: "Collaboration sur l'analyse d'images satellites pour documenter les dommages en zone de conflit.",
+                peer2_name: "Nations Unies (UN Pulse)",
+                peer2_text: "Alignement sur les cadres de l'ONU pour l'analyse prédictive dans la réponse humanitaire.",
+                peer3_name: "Bellingcat",
+                peer3_text: "Co-développement d'outils d'investigation open-source pour vérifier les deepfakes.",
+                peer4_name: "Médecins Sans Frontières (MSF)",
+                peer4_text: "Exploration de l'utilisation du traitement du langage naturel pour la traduction rapide des directives médicales dans les zones de crise. Partage de cadres sur la gestion responsable des données de santé.",
+                peer5_name: "Comité International de la Croix-Rouge (CICR)",
+                peer5_text: "Collaboration sur les politiques de protection des données biométriques. Développement de normes éthiques communes pour l'utilisation de la reconnaissance faciale dans des contextes humanitaires.",
+                eval_title: "Normes d'Évaluation PoC et MVP",
+                eval_desc: "Cadres rigoureux pour évaluer les déploiements de preuves de concept et de produits minimaux viables.",
+                eval_step1: "Évaluation de l'Impact Éthique",
+                eval_step1_text: "Examen obligatoire des préjudices potentiels pour les groupes marginalisés.",
+                eval_step2: "Calibration Précision vs Rappel",
+                eval_step2_text: "Les modèles doivent être ajustés pour minimiser les faux négatifs.",
+                eval_step3: "Audit de Sécurité et de Confidentialité",
+                eval_step3_text: "Vérification du chiffrement des données et de la conformité aux normes internationales.",
+                eval_step4: "Vérification de l'Explicabilité",
+                eval_step4_text: "Si nous ne pouvons pas expliquer la conclusion d'un modèle, nous ne pouvons pas l'utiliser."
+            },
+            es: {
+                title: "Portal de Estrategia de IA - HRW",
+                subtitle: "Promoviendo los Derechos Humanos mediante Inteligencia Artificial Responsable",
+                tab_responsible: "IA Responsable",
+                tab_dashboard: "Panel de Impacto",
+                tab_peers: "Organizaciones Pares",
+                tab_evaluation: "Estándares de Evaluación",
+                resp_title: "Uso Responsable y Prompts Eficaces",
+                resp_desc: "Directrices para garantizar el uso seguro e imparcial de la IA Generativa.",
+                resp_card1_title: "Retención Cero de Datos",
+                resp_card1_text: "Utilice entornos empresariales con acuerdos estrictos de no retención de datos. Nunca introduzca datos personales de poblaciones vulnerables.",
+                resp_card2_title: "Mitigación del Sesgo Algorítmico",
+                resp_card2_text: "Estructure las indicaciones para exigir análisis objetivos. Contraste los resultados de la IA con inteligencia de fuentes abiertas.",
+                resp_card3_title: "Revisión Humana Significative",
+                resp_card3_text: "La IA es una herramienta de asistencia. Todas las traducciones y resúmenes automatizados requieren verificación humana.",
+                dash_title: "Panel de Impacto de Soluciones de IA",
+                dash_desc: "Visualizando los beneficios operativos de las soluciones de Inteligencia Artificial.",
+                dash_metric1: "Horas de Traducción Ahorradas (Mensual)",
+                dash_metric2: "Precisión de Alerta de Crisis (OSINT)",
+                dash_metric3: "Velocidad de Procesamiento de Imágenes Satelitales",
+                peers_title: "Organizaciones Pares y Colaboración",
+                peers_desc: "Mapeando la adopción de IA en el sector de derechos humanos para compartir mejores prácticas.",
+                peer1_name: "Amnistía Internacional",
+                peer1_text: "Colaboración en el análisis de imágenes satelitales para documentar daños en zonas de conflicto.",
+                peer2_name: "Naciones Unidas (UN Pulse)",
+                peer2_text: "Alineación con los marcos de la ONU para el análisis predictivo en la respuesta humanitaria.",
+                peer3_name: "Bellingcat",
+                peer3_text: "Desarrollo conjunto de herramientas de investigación de código abierto para verificar deepfakes.",
+                peer4_name: "Médicos Sin Fronteras (MSF)",
+                peer4_text: "Explorando el uso del procesamiento del lenguaje natural para la traducción rápida de directrices médicas en zonas de crisis. Compartiendo marcos sobre la gestión responsable de datos de salud.",
+                peer5_name: "Comité Internacional de la Cruz Roja (CICR)",
+                peer5_text: "Colaborando en políticas de protección de datos biométricos. Desarrollando estándares éticos conjuntos para el uso del reconocimiento facial en contextos humanitarios.",
+                eval_title: "Estándares de Evaluación PoC y MVP",
+                eval_desc: "Marcos rigurosos para evaluar implementaciones de Pruebas de Concepto y Productos Mínimos Viables.",
+                eval_step1: "Evaluación de Impacto Ético",
+                eval_step1_text: "Revisión obligatoria de posibles daños a grupos marginados antes de cualquier piloto.",
+                eval_step2: "Calibración de Precisión frente a Exhaustividad",
+                eval_step2_text: "Los modelos deben ajustarse para minimizar los falsos negativos en el seguimiento de los derechos humanos.",
+                eval_step3: "Auditoría de Seguridad y Privacidad",
+                eval_step3_text: "Verificación del cifrado de datos y cumplimiento de los estándares internacionales.",
+                eval_step4: "Verificación de Explicabilidad",
+                eval_step4_text: "Si no podemos explicar la conclusión de un modelo, no podemos usarlo."
+            },
+            nl: {
+                title: "HRW AI-strategieportaal",
+                subtitle: "Bevordering van mensenrechten door verantwoorde kunstmatige intelligentie",
+                tab_responsible: "Verantwoorde AI",
+                tab_dashboard: "Impact Dashboard",
+                tab_peers: "Partnerorganisaties",
+                tab_evaluation: "Evaluatiestandaarden",
+                resp_title: "Effectief Prompting & Verantwoord Gebruik",
+                resp_desc: "Richtlijnen voor een veilig en onbevooroordeeld gebruik van generatieve AI.",
+                resp_card1_title: "Nul-Data Retentie",
+                resp_card1_text: "Gebruik bedrijfsomgevingen met strikte afspraken over het niet bewaren van gegevens. Voer nooit persoonlijke gegevens van kwetsbare personen in.",
+                resp_card2_title: "Beperking van algoritmische vooroordelen",
+                resp_card2_text: "Structureer prompts om objectieve analyses te eisen. Controleer AI-uitvoer met geverifieerde open-source intelligentie.",
+                resp_card3_title: "Betekenisvolle menselijke beoordeling",
+                resp_card3_text: "AI is een hulpmiddel. Alle geautomatiseerde vertalingen vereisen menselijke verificatie.",
+                dash_title: "Impact Dashboard voor AI-oplossingen",
+                dash_desc: "Visualisatie van de operationele voordelen van AI- en machine learning-oplossingen.",
+                dash_metric1: "Bespaarde vertaaluren (maandelijks)",
+                dash_metric2: "Nauwkeurigheid crisiswaarschuwingen (OSINT)",
+                dash_metric3: "Verwerkingssnelheid satellietbeelden",
+                peers_title: "Partnerorganisaties & Samenwerking",
+                peers_desc: "In kaart brengen van AI-adoptie in de mensenrechtensector om best practices te delen.",
+                peer1_name: "Amnesty International",
+                peer1_text: "Samenwerking bij de analyse van satellietbeelden om schade aan infrastructuur in conflictgebieden te documenteren.",
+                peer2_name: "Verenigde Naties (UN Pulse)",
+                peer2_text: "Afstemming op VN-kaders voor voorspellende analyses bij humanitaire respons.",
+                peer3_name: "Bellingcat",
+                peer3_text: "Gezamenlijke ontwikkeling van open-source onderzoekstools om deepfakes te verifiëren.",
+                peer4_name: "Artsen zonder Grenzen (MSF)",
+                peer4_text: "Onderzoek naar het gebruik van natuurlijke taalverwerking voor snelle vertaling van medische richtlijnen in crisisgebieden. Delen van kaders voor verantwoord beheer van gezondheidsgegevens.",
+                peer5_name: "Internationale Comité van het Rode Kruis (ICRC)",
+                peer5_text: "Samenwerking aan beleid voor de bescherming van biometrische gegevens. Ontwikkeling van gezamenlijke ethische normen voor het gebruik van gezichtsherkenning in humanitaire contexten.",
+                eval_title: "PoC & MVP Evaluatiestandaarden",
+                eval_desc: "Strenge kaders voor het evalueren van Proof of Concept en Minimum Viable Product implementaties.",
+                eval_step1: "Ethische impactbeoordeling",
+                eval_step1_text: "Verplichte screening op mogelijke schade voor gemarginaliseerde groepen.",
+                eval_step2: "Kalibratie van nauwkeurigheid vs. recall",
+                eval_step2_text: "Modellen moeten worden afgesteld om fout-negatieven te minimaliseren.",
+                eval_step3: "Beveiligings- en privacy-audit",
+                eval_step3_text: "Verificatie van gegevensversleuteling en naleving van internationale normen.",
+                eval_step4: "Controle op uitlegbaarheid",
+                eval_step4_text: "Als we de conclusie van een model niet kunnen uitleggen, kunnen we het niet gebruiken."
+            },
+            ar: {
+                title: "بوابة استراتيجية الذكاء الاصطناعي",
+                subtitle: "تعزيز حقوق الإنسان من خلال الذكاء الاصطناعي المسؤول",
+                tab_responsible: "الذكاء الاصطناعي المسؤول",
+                tab_dashboard: "لوحة التأثير",
+                tab_peers: "المنظمات النظيرة",
+                tab_evaluation: "معايير التقييم",
+                resp_title: "الاستخدام المسؤول والتوجيه الفعال",
+                resp_desc: "إرشادات لضمان الاستخدام الآمن والموضوعي للذكاء الاصطناعي التوليدي.",
+                resp_card1_title: "عدم الاحتفاظ بالبيانات",
+                resp_card1_text: "استخدم بيئات المؤسسات مع اتفاقيات صارمة لعدم الاحتفاظ بالبيانات. لا تقم أبدًا بإدخال بيانات شخصية للسكان المعرضين للخطر.",
+                resp_card2_title: "التخفيف من التحيز الخوارزمي",
+                resp_card2_text: "صياغة الأوامر لطلب تحليلات موضوعية. قم بمقاطعة مخرجات الذكاء الاصطناعي مع معلومات المصادر المفتوحة التي تم التحقق منها.",
+                resp_card3_title: "المراجعة البشرية الهادفة",
+                resp_card3_text: "الذكاء الاصطناعي هو أداة مساعدة. تتطلب جميع الترجمات والملخصات الآلية تحققًا بشريًا.",
+                dash_title: "لوحة تأثير حلول الذكاء الاصطناعي",
+                dash_desc: "تصور الفوائد التشغيلية لحلول الذكاء الاصطناعي والتعلم الآلي.",
+                dash_metric1: "ساعات الترجمة الموفرة (شهريًا)",
+                dash_metric2: "دقة التنبيه بالأزمات",
+                dash_metric3: "سرعة معالجة صور الأقمار الصناعية",
+                peers_title: "المنظمات النظيرة والتعاون",
+                peers_desc: "رسم خرائط اعتماد الذكاء الاصطناعي عبر قطاع حقوق الإنسان لمشاركة أفضل الممارسات.",
+                peer1_name: "منظمة العفو الدولية",
+                peer1_text: "التعاون في تحليل صور الأقمار الصناعية لتوثيق أضرار البنية التحتية في مناطق النزاع.",
+                peer2_name: "الأمم المتحدة (UN Pulse)",
+                peer2_text: "المواءمة مع أطر الأمم المتحدة للتحليلات التنبؤية في الاستجابة الإنسانية.",
+                peer3_name: "بيلينغكات",
+                peer3_text: "التطوير المشترك لأدوات تحقيق مفتوحة المصدر للتحقق من التزييف العميق.",
+                peer4_name: "أطباء بلا حدود (MSF)",
+                peer4_text: "استكشاف استخدام معالجة اللغات الطبيعية للترجمة السريعة للإرشادات الطبية في مناطق الأزمات. مشاركة أطر إدارة البيانات الصحية المسؤولة.",
+                peer5_name: "اللجنة الدولية للصليب الأحمر (ICRC)",
+                peer5_text: "التعاون في سياسات حماية البيانات البيومترية. تطوير معايير أخلاقية مشتركة لاستخدام التعرف على الوجوه في السياقات الإنسانية.",
+                eval_title: "معايير تقييم إثبات المفهوم",
+                eval_desc: "أطر صارمة لتقييم عمليات نشر إثبات المفهوم (PoC) والحد الأدنى للمنتج القابل للتطبيق (MVP).",
+                eval_step1: "تقييم الأثر الأخلاقي",
+                eval_step1_text: "فحص إلزامي للأضرار المحتملة على الفئات المهمشة قبل بدء أي برنامج تجريبي.",
+                eval_step2: "معايرة الدقة مقابل الاستدعاء",
+                eval_step2_text: "يجب ضبط النماذج لتقليل السلبيات الكاذبة في مراقبة حقوق الإنسان.",
+                eval_step3: "تدقيق الأمن والخصوصية",
+                eval_step3_text: "التحقق من تشفير البيانات والامتثال للمعايير الدولية لحماية البيانات.",
+                eval_step4: "التحقق من قابلية التفسير",
+                eval_step4_text: "إذا لم نتمكن من تفسير كيفية وصول النموذج إلى استنتاجه، فلا يمكننا استخدامه."
+            }
+        };
 
-        {/* Tab Content Areas */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8">
-          
-          {/* 1. Responsible AI */}
-          {activeTab === 'responsible' && (
-            <div className="animate-in fade-in duration-500">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('resp_title')}</h2>
-              <p className="text-slate-600 mb-8">{t('resp_desc')}</p>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-red-50 p-6 rounded-xl border border-red-100">
-                  <Lock className="h-8 w-8 text-red-600 mb-4" />
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{t('resp_card1_title')}</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">{t('resp_card1_text')}</p>
+        const languages = [
+            { code: 'en', name: 'English' },
+            { code: 'pt', name: 'Português' },
+            { code: 'de', name: 'Deutsch' },
+            { code: 'fr', name: 'Français' },
+            { code: 'es', name: 'Español' },
+            { code: 'nl', name: 'Dutch' },
+            { code: 'ar', name: 'العربية' }
+        ];
+
+        function App() {
+            const [lang, setLang] = useState('en');
+            const [activeTab, setActiveTab] = useState('responsible');
+
+            const t = (key) => translations[lang][key] || translations['en'][key];
+            const isRTL = lang === 'ar';
+
+            return (
+                <div 
+                    className={`min-h-screen bg-slate-50 text-slate-900 font-sans ${isRTL ? 'rtl' : 'ltr'}`} 
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                    {/* Header */}
+                    <header className="bg-blue-900 text-white shadow-md">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Globe className="h-8 w-8 text-blue-300" />
+                                <div>
+                                    <h1 className="text-xl font-bold tracking-tight">{t('title')}</h1>
+                                    <p className="text-xs text-blue-200 hidden sm:block">{t('subtitle')}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <select 
+                                    value={lang} 
+                                    onChange={(e) => setLang(e.target.value)}
+                                    className="bg-blue-800 text-white border border-blue-700 rounded-md py-1 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                >
+                                    {languages.map(l => (
+                                        <option key={l.code} value={l.code}>{l.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        
+                        {/* Navigation Tabs */}
+                        <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-200 pb-2">
+                            {[
+                                { id: 'responsible', icon: BookOpen, label: t('tab_responsible') },
+                                { id: 'dashboard', icon: BarChart3, label: t('tab_dashboard') },
+                                { id: 'peers', icon: Users, label: t('tab_peers') },
+                                { id: 'evaluation', icon: ShieldCheck, label: t('tab_evaluation') }
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                                        activeTab === tab.id 
+                                            ? 'bg-blue-100 text-blue-800 border-b-2 border-blue-700' 
+                                            : 'text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    <tab.icon className="h-4 w-4" />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Tab Content Areas */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8">
+                            
+                            {/* 1. Responsible AI */}
+                            {activeTab === 'responsible' && (
+                                <div className="fade-in">
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('resp_title')}</h2>
+                                    <p className="text-slate-600 mb-8">{t('resp_desc')}</p>
+                                    
+                                    <div className="grid md:grid-cols-3 gap-6">
+                                        <div className="bg-red-50 p-6 rounded-xl border border-red-100">
+                                            <Lock className="h-8 w-8 text-red-600 mb-4" />
+                                            <h3 className="text-lg font-bold text-slate-900 mb-2">{t('resp_card1_title')}</h3>
+                                            <p className="text-sm text-slate-700 leading-relaxed">{t('resp_card1_text')}</p>
+                                        </div>
+                                        <div className="bg-orange-50 p-6 rounded-xl border border-orange-100">
+                                            <AlertTriangle className="h-8 w-8 text-orange-600 mb-4" />
+                                            <h3 className="text-lg font-bold text-slate-900 mb-2">{t('resp_card2_title')}</h3>
+                                            <p className="text-sm text-slate-700 leading-relaxed">{t('resp_card2_text')}</p>
+                                        </div>
+                                        <div className="bg-green-50 p-6 rounded-xl border border-green-100">
+                                            <Users className="h-8 w-8 text-green-600 mb-4" />
+                                            <h3 className="text-lg font-bold text-slate-900 mb-2">{t('resp_card3_title')}</h3>
+                                            <p className="text-sm text-slate-700 leading-relaxed">{t('resp_card3_text')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 2. Impact Dashboard */}
+                            {activeTab === 'dashboard' && (
+                                <div className="fade-in">
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('dash_title')}</h2>
+                                    <p className="text-slate-600 mb-8">{t('dash_desc')}</p>
+
+                                    <div className="space-y-8">
+                                        {/* Metric 1 */}
+                                        <div>
+                                            <div className="flex justify-between text-sm font-semibold mb-2">
+                                                <span>{t('dash_metric1')}</span>
+                                                <span className="text-blue-700">1,240 hrs</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-4">
+                                                <div className="bg-blue-600 h-4 rounded-full" style={{ width: '85%' }}></div>
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-2">Target: 1,500 hrs / month</p>
+                                        </div>
+
+                                        {/* Metric 2 */}
+                                        <div>
+                                            <div className="flex justify-between text-sm font-semibold mb-2">
+                                                <span>{t('dash_metric2')}</span>
+                                                <span className="text-teal-700">92%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-4">
+                                                <div className="bg-teal-500 h-4 rounded-full" style={{ width: '92%' }}></div>
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-2">Baseline without ML: 68%</p>
+                                        </div>
+
+                                        {/* Metric 3 */}
+                                        <div>
+                                            <div className="flex justify-between text-sm font-semibold mb-2">
+                                                <span>{t('dash_metric3')}</span>
+                                                <span className="text-purple-700">4.5x Faster</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-4">
+                                                <div className="bg-purple-500 h-4 rounded-full" style={{ width: '75%' }}></div>
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-2">Compared to manual geographic survey methods.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 3. Peer Organisations */}
+                            {activeTab === 'peers' && (
+                                <div className="fade-in">
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('peers_title')}</h2>
+                                    <p className="text-slate-600 mb-8">{t('peers_desc')}</p>
+
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        {[
+                                            { name: t('peer1_name'), text: t('peer1_text'), color: 'bg-yellow-400' },
+                                            { name: t('peer2_name'), text: t('peer2_text'), color: 'bg-blue-400' },
+                                            { name: t('peer3_name'), text: t('peer3_text'), color: 'bg-slate-800' },
+                                            { name: t('peer4_name'), text: t('peer4_text'), color: 'bg-red-600' },
+                                            { name: t('peer5_name'), text: t('peer5_text'), color: 'bg-red-700' }
+                                        ].map((peer, idx) => (
+                                            <div key={idx} className="flex gap-4 p-5 border border-slate-200 rounded-xl hover:shadow-md transition-shadow">
+                                                <div className={`h-12 w-12 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-xl ${peer.color}`}>
+                                                    {peer.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-slate-900">{peer.name}</h3>
+                                                    <p className="text-sm text-slate-600 mt-2">{peer.text}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 4. Evaluation Standards */}
+                            {activeTab === 'evaluation' && (
+                                <div className="fade-in">
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('eval_title')}</h2>
+                                    <p className="text-slate-600 mb-8">{t('eval_desc')}</p>
+
+                                    <div className="space-y-4">
+                                        {[
+                                            { title: t('eval_step1'), text: t('eval_step1_text') },
+                                            { title: t('eval_step2'), text: t('eval_step2_text') },
+                                            { title: t('eval_step3'), text: t('eval_step3_text') },
+                                            { title: t('eval_step4'), text: t('eval_step4_text') }
+                                        ].map((step, idx) => (
+                                            <div key={idx} className="flex gap-4 items-start bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                                <CheckCircle className="h-6 w-6 text-blue-600 shrink-0 mt-0.5" />
+                                                <div>
+                                                    <h3 className="font-bold text-slate-900">{step.title}</h3>
+                                                    <p className="text-sm text-slate-600 mt-1">{step.text}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </main>
                 </div>
-                <div className="bg-orange-50 p-6 rounded-xl border border-orange-100">
-                  <AlertTriangle className="h-8 w-8 text-orange-600 mb-4" />
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{t('resp_card2_title')}</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">{t('resp_card2_text')}</p>
-                </div>
-                <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-                  <Users className="h-8 w-8 text-green-600 mb-4" />
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{t('resp_card3_title')}</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">{t('resp_card3_text')}</p>
-                </div>
-              </div>
-            </div>
-          )}
+            );
+        }
 
-          {/* 2. Impact Dashboard */}
-          {activeTab === 'dashboard' && (
-            <div className="animate-in fade-in duration-500">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('dash_title')}</h2>
-              <p className="text-slate-600 mb-8">{t('dash_desc')}</p>
-
-              <div className="space-y-8">
-                {/* Metric 1 */}
-                <div>
-                  <div className="flex justify-between text-sm font-semibold mb-2">
-                    <span>{t('dash_metric1')}</span>
-                    <span className="text-blue-700">1,240 hrs</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-4">
-                    <div className="bg-blue-600 h-4 rounded-full" style={{ width: '85%' }}></div>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">Target: 1,500 hrs / month</p>
-                </div>
-
-                {/* Metric 2 */}
-                <div>
-                  <div className="flex justify-between text-sm font-semibold mb-2">
-                    <span>{t('dash_metric2')}</span>
-                    <span className="text-teal-700">92%</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-4">
-                    <div className="bg-teal-500 h-4 rounded-full" style={{ width: '92%' }}></div>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">Baseline without ML: 68%</p>
-                </div>
-
-                {/* Metric 3 */}
-                <div>
-                  <div className="flex justify-between text-sm font-semibold mb-2">
-                    <span>{t('dash_metric3')}</span>
-                    <span className="text-purple-700">4.5x Faster</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-4">
-                    <div className="bg-purple-500 h-4 rounded-full" style={{ width: '75%' }}></div>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">Compared to manual geographic survey methods.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 3. Peer Organisations */}
-          {activeTab === 'peers' && (
-            <div className="animate-in fade-in duration-500">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('peers_title')}</h2>
-              <p className="text-slate-600 mb-8">{t('peers_desc')}</p>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {[
-                  { name: t('peer1_name'), text: t('peer1_text'), color: 'bg-yellow-400' },
-                  { name: t('peer2_name'), text: t('peer2_text'), color: 'bg-blue-400' },
-                  { name: t('peer3_name'), text: t('peer3_text'), color: 'bg-slate-800' },
-                  { name: t('peer4_name'), text: t('peer4_text'), color: 'bg-red-600' },
-                  { name: t('peer5_name'), text: t('peer5_text'), color: 'bg-red-700' }
-                ].map((peer, idx) => (
-                  <div key={idx} className="flex gap-4 p-5 border border-slate-200 rounded-xl hover:shadow-md transition-shadow">
-                    <div className={`h-12 w-12 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-xl ${peer.color}`}>
-                      {peer.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900">{peer.name}</h3>
-                      <p className="text-sm text-slate-600 mt-2">{peer.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 4. Evaluation Standards */}
-          {activeTab === 'evaluation' && (
-            <div className="animate-in fade-in duration-500">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('eval_title')}</h2>
-              <p className="text-slate-600 mb-8">{t('eval_desc')}</p>
-
-              <div className="space-y-4">
-                {[
-                  { title: t('eval_step1'), text: t('eval_step1_text') },
-                  { title: t('eval_step2'), text: t('eval_step2_text') },
-                  { title: t('eval_step3'), text: t('eval_step3_text') },
-                  { title: t('eval_step4'), text: t('eval_step4_text') }
-                ].map((step, idx) => (
-                  <div key={idx} className="flex gap-4 items-start bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    <CheckCircle className="h-6 w-6 text-blue-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-bold text-slate-900">{step.title}</h3>
-                      <p className="text-sm text-slate-600 mt-1">{step.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
-  );
-}
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
